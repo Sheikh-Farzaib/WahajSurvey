@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -20,23 +21,29 @@ namespace DBHandler.Repositories.Implementation
             _context = applicationDb;
         }
         public async Task<bool> Create(Category category)
-        {  
+        {
             await _context.Catagories.AddAsync(category);
             await _context.SaveChangesAsync();
             return true;
         }
 
- 
+        public async Task<List<Category>> GetCategoriesListByIds(List<int> category)
+        {
+            var list = await _context.Catagories.Where(predicate: (whr) => category.Contains(whr.CategoryId.Value))
+                .Select(x => new Category { CategoryId = x.CategoryId, CategoryName = x.CategoryName })
+                .ToListAsync();
+            return list;
+        }
 
         public async Task<List<Category>> GetAll(int branchId)
-        => await _context.Catagories.Where(x=>x.BranchId == branchId).ToListAsync();
+        => await _context.Catagories.Where(x => x.BranchId == branchId).ToListAsync();
 
-        public async Task<Category> GetById(int branchId) 
+        public async Task<Category> GetById(int branchId)
         => await _context.Catagories.FirstOrDefaultAsync(whr => whr.Branch.BranchId == branchId);
 
-   
-        
 
-      
+
+
+
     }
 }

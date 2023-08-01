@@ -13,6 +13,8 @@ namespace DBHandler.Repositories.Interface
         Task<Category> GetById(int branchId);
         Task<List<Category>> GetAll(int branchId);
         Task<bool> Create(Category category);
-        
+        Task<List<Category>> GetCategoriesListByIds(List<int> category);
+
+
     }
 }

@@ -9,9 +9,9 @@ namespace DBHandler.Repositories.Interface
 {
     public interface IItemRepository
     {
-        Task<Item> GetById(int id, int branchid);
+        Task<Item> GetById(int id);
         Task<List<Item>> GetAll(int branchId);
         Task<List<Item>> GetItemsByCategoryId(int categoryId);
-        Task<bool> CreateSurvery(List<SubmittedAnswer> submittedAnswer);
+        Task<List<Item>> GetById(List<int> id);
     }
 }

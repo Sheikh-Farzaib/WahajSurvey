@@ -1,6 +1,7 @@
 ﻿using DBHandler.Models;
 using DBHandler.Repositories.Interface;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Packaging.Signing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,19 +25,16 @@ namespace DBHandler.Repositories.Implementation
             return true;
         }
 
-        public async Task<bool> CreateSurvery(List<SubmittedAnswer> submittedAnswer)
-        {
-            await _context.SubmittedAnswers.AddRangeAsync(submittedAnswer);
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
         public async Task<List<Item>> GetAll(int branchId) => await _context.Items
             .Where(whr=>whr.Category.Branch.BranchId == branchId)
             .ToListAsync();
 
-        public async Task<Item> GetById(int id, int branchId) => 
-            await _context.Items.FirstOrDefaultAsync(whr => whr.Category.Branch.BranchId == branchId && whr.ItemId == id);
+        public async Task<Item> GetById(int id) => 
+            await _context.Items.FirstOrDefaultAsync(whr => whr.ItemId == id); 
+        public async Task<List<Item>> GetById(List<int> id) =>
+            await _context.Items
+        .Where(item => id.Contains(item.ItemId))
+        .ToListAsync();
         public async Task<List<Item>> GetItemsByCategoryId(int id) =>
             await _context.Items.Where(whr => whr.CategoryId == id)
             .ToListAsync();

@@ -1,0 +1,220 @@
+﻿
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+
+<style>
+    .accordion-body{
+        display: flex;
+        justify-content: center;
+        height: 500px!important;
+        width: 100%!important;
+    }
+
+    .accordion-button{
+        font-weight: bold;
+        font-size: 20px;
+        border: 1px solid #6f42c1;
+        color: #6f42c1!important;
+    }
+
+    .accordion-button:focus{
+            box-shadow: 0 2px 4px #6f42c1;
+            border: 1px solid #6f42c1 !important;
+    }
+
+        .accordion-button:hover {
+             color: #fff!important;
+        }
+
+    select.form-select option:hover {
+        box-shadow: 0 0 10px 100px #6f42c1 inset!important;
+    }
+
+    option:checked
+ {
+     color: white;
+        background-color: #6f42c1;
+    }
+/*  select.form-select {
+        background-color: #6f42c1;
+        color: white;
+    }
+
+        select.form-select:hover,
+        select.form-select:focus {
+            background-color: white; 
+            color: white; }*/
+
+</style>
+<div class="row gy-3 gy-lg-0" id="inputRow">
+    <div class="col-lg-6">
+ 
+            <label for="selectBranch">  
+            Branches<span class="text-danger">*</span>
+        </label>
+                <select class="form-select" id="selectBranch">
+                    <option value="" selected>Select Branch</option>
+                </select>
+     
+   
+    </div>
+    <div class="col-lg-2">
+   
+            <label for="fromDate">
+            From Date:
+        </label>
+                <input class="form-control" type="date" id="fromDate" />
+           
+  
+    </div>
+    <div class="col-lg-2">
+       
+            <label for="toDate">
+            To Date:
+        </label>
+                <input class="form-control" type="date" id="toDate" />
+          
+    
+    </div>
+    <div class="col-lg-2">
+        <label></label>
+        <button class="btn btn-primary float-end float-lg-start mt-4" id="submitBtn">Search</button>
+    </div>
+
+</div>
+<div class="row" id="mainRow">
+
+</div>
+<script>
+    $(document).ready(function(){
+        $.ajax({
+            url: '/Survey/BranchList',
+            success: function (data) {
+                //console.log(JSON.(data));
+                $.each(data, function (index, value) {
+                    console.log(value)
+                    var selectInputCol = `<option class="text-bold" value="${value.branchId}"><div class="d-flex justify-content-between">
+                    <span class="me-auto">${value.branchName}</span>
+                    </div></option>`;
+                    $('#selectBranch').append(selectInputCol);
+                    //hitToGet(value.branchId)
+                });
+            },
+            error: function () {
+                alert('Error retrieving data Branch List.');
+            }
+        });
+
+    });
+
+    function validateDates() {
+        var fromDate = new Date($("#fromDate").val());
+        var toDate = new Date($("#toDate").val());
+
+        if (fromDate > toDate) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Not Valid',
+                text: 'From Date cannot be greater than To Date.'
+            });
+        }
+    }
+
+    $("#fromDate, #toDate").on("input", validateDates);
+
+    $("#submitBtn").click(function () {
+        submitForm();
+        validateDates();
+    });
+
+
+    function createPieChart(data) {
+        console.log(data)
+        var canvasId;
+        var canvas;
+        $("#mainRow").empty();
+        $.each(data, function (index, value) {
+            var col = `<div class="col-lg-6 mt-3">
+                          <div class="card" id="category${value.categoryId}">
+                            <h5 class="card-title d-flex justify-content-center">
+                              <span>${value.categoryName}</span>
+                            </h5>
+                            <canvas id="canvas${value.categoryId}"></canvas>
+                          </div>
+                        </div>`;
+
+            $("#mainRow").append(col);
+
+            const labels = value.items.map(item => item.itemName);
+            const values = value.items.map(item => item.itemCount);
+            const backgroundColors = values.map(() => getRandomColor());
+
+            const ctx = document.getElementById(`canvas${value.categoryId}`).getContext('2d');
+            const pieChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values
+                    }]
+                },
+                options: {
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: value.categoryName
+                        }
+                    }
+                }
+            });
+            
+        });
+    }
+    function getRandomColor() {
+        const letters = "0123456789ABCDEF";
+        let color = "#";
+        for (let i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+  
+    function submitForm() {
+        debugger
+        if ($('#selectBranch').val() === "") {
+            Swal.fire({
+                icon: 'error',
+                title: 'Required',
+                text: 'Fill The Required Fields'
+            });
+            return;
+        }
+
+        var data = {};
+        data.BranchId = $('#selectBranch').val();
+        data.FromDate = $('#fromDate').val();
+        data.ToDate = $('#toDate').val();
+
+        $.ajax({
+            url: '/Dashboard/GetSurveyAnswersList',
+            type: 'POST',
+            data: data,
+            success: function (resp){
+                createPieChart(resp)
+            },
+            error: err=> {
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: err.responseJSON.message
+                });
+            }
+        });
+        console.log(data);
+    }
+       
+</script>
